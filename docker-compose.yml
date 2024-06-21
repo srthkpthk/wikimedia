@@ -89,7 +89,9 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: 'update'
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'org.hibernate.dialect.PostgreSQLDialect'
     ports:
-      - 8082:8080
+      ports:
+        - 8082:8080
+      restart: unless-stopped
 
   wikimedia_consumer:
     container_name: consumer
