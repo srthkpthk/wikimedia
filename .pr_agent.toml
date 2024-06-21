@@ -1,0 +1,19 @@
+[pr_description]
+extra_instructions="""\
+For the title, use the format [type]: [summary]
+"""
+publish_labels=true
+publish_description_as_comment=true
+generate_ai_title=true
+use_description_markers=true
+final_update_message=true
+[pr_reviewer]
+inline_code_comments=true
+require_score_review=true
+require_can_be_split_review=true
+[pr_code_suggestions]
+commitable_code_suggestions=true
+[pr_update_changelog]
+push_changelog_changes=true
+[pr_add_docs]
+docs_style="google style guides"
