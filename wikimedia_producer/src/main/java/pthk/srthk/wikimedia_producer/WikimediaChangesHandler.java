@@ -17,7 +17,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class WikimediaChangesHandler implements EventHandler {
 
-    private final Logger LOG = LoggerFactory.getLogger(WikimediaChangesHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WikimediaChangesHandler.class);
 
     private KafkaTemplate<String, String> kafkaTemplate;
     private String topic;

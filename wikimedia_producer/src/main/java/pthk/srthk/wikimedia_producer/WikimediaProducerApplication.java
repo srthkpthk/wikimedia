@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @AllArgsConstructor
 public class WikimediaProducerApplication implements CommandLineRunner {
 
-    private WikimediaProducer wikimediaProducer;
+    final private WikimediaProducer wikimediaProducer;
 
     public static void main(String[] args) {
         SpringApplication.run(WikimediaProducerApplication.class, args);
@@ -20,6 +20,7 @@ public class WikimediaProducerApplication implements CommandLineRunner {
 
     /**
      * Runs the Wikimedia producer after the application has started.
+     *
      * @param args Command line arguments.
      * @throws Exception if an error occurs while sending the message.
      */
