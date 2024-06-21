@@ -1,0 +1,104 @@
+services:
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - 2182:2181
+
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: unless-stopped
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka_exporter
+    depends_on:
+      - kafka
+    command:
+      - '--kafka.server=kafka:9092'
+    ports:
+      - 9308:9308
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - 8090:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: srthk
+      POSTGRES_PASSWORD: hello
+      POSTGRES_DB: wikimedia
+
+  wikimedia_producer:
+    container_name: producer
+    build:
+      context: ./wikimedia_producer
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 'kafka:9092'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://postgres:5432/wikimedia'
+      SPRING_DATASOURCE_USERNAME: 'srthk'
+      SPRING_DATASOURCE_PASSWORD: 'hello'
+      SPRING_JPA_HIBERNATE_DDL_AUTO: 'update'
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'org.hibernate.dialect.PostgreSQLDialect'
+    ports:
+      - 8082:8080
+    restart: unless-stopped
+
+  wikimedia_consumer:
+    container_name: consumer
+    build:
+      context: ./wikimedia_consumer
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: 'kafka:9092'
+    ports:
+      - 8081:8080
